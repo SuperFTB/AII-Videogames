@@ -6,7 +6,7 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('',
     url(r'^$', 'libros.views.index'),
-    url(r'^populate/', 'libros.views.populateDB'),
+    url(r'^populate/', 'vg.views.populate'),
     url(r'^loadRS', 'libros.views.loadRS'),
     url(r'^search/', 'libros.views.search_isbn'),
     url(r'^usersActive/', 'libros.views.recommendedFilms'),
