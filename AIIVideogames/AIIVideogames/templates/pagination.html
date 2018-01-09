@@ -1,0 +1,33 @@
+<div>
+<ul class="pagination">
+	
+	{% ifequal p 1 %}
+		<li class="disabled">
+	{% else %}
+		<li>
+	{% endifequal %}
+	<a href="{{requestURI|add:"&p="|add:p_prev}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+	
+	
+	{% for i in range %}
+		{% ifequal p i %}
+			<li class="active"><a href="{{requestURI}}&p={{i}}">{{i}}</a></li>
+		{% else %}
+			{% ifequal i "..." %}
+				<li class="disabled"><a href="#">{{i}}</a></li>
+			{% else %}
+				<li><a href="{{requestURI}}&p={{i}}">{{i}}</a></li>
+			{% endifequal %}
+		{% endifequal %}
+	{% endfor %}
+	
+	
+	{% ifequal p max_p %}
+		<li class="disabled">
+	{% else %}
+		<li>
+	{% endifequal %}
+	<a href="{{requestURI|add:"&p="|add:p_next}}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+
+</ul>
+</div>

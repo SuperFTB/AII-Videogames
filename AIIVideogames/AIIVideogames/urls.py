@@ -5,10 +5,8 @@ from django.conf.urls import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^$', 'libros.views.index'),
+    url(r'^$', 'vg.views.index'),
     url(r'^populate/', 'vg.views.populate'),
-    url(r'^loadRS', 'libros.views.loadRS'),
-    url(r'^search/', 'libros.views.search_isbn'),
-    url(r'^usersActive/', 'libros.views.recommendedFilms'),
-    url(r'^recommendBooks/', 'libros.views.reccommendLibros')
+    url(r'^category/list/', 'vg.views.list_category'),
+    url(r'^category/explore/', 'vg.views.explore_category')
 )

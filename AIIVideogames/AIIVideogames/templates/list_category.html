@@ -1,0 +1,16 @@
+{% extends 'base.html' %} 
+{% block content %}
+<div style="margin-left: 5%; margin-right: 5%">
+	{% for col in items %}
+		<div style="width:{% widthratio 100 items|length 1 %}%; float: left">
+		{% for item in col %}
+			{% if item|slice:"0:2" == "L:"%}
+				<div><h3>{{item|slice:"2:"}}</h3></div>
+			{% elif item|slice:"0:2" == "N:" %}
+				<div><a style="text-decoration:none" href="/category/explore?name={{item|slice:"2:"}}">{{item|slice:"2:"}}</a></div>
+			{% endif %}
+		{% endfor %}
+		</div>
+	{% endfor %}
+</div>
+{% endblock %}

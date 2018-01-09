@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from django.db import models
-from numpy import unique
 
 
 class User(User):
@@ -25,7 +24,7 @@ class Category(models.Model):
 
 
 class Page(models.Model):
-    name = models.CharField(max_length=40, null=False, blank=False)
+    name = models.CharField(max_length=40, null=False, blank=False, unique=True)
     image = models.URLField(null=False, blank=False)
     
     def __unicode__(self):
@@ -54,7 +53,7 @@ class GamePage(models.Model):
 
 
 class MediaList(models.Model):
-    value = models.URLField()
+    value = models.URLField(unique=True)
     game = models.ForeignKey(Game)
     
     def __unicode__(self):
