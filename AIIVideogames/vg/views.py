@@ -1,8 +1,17 @@
+import shelve
+
+from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import login, logout
 from django.core.paginator import Paginator
-from django.shortcuts import render_to_response
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response, render
+from django.template.context import RequestContext
 
 from vg.models import Game, MediaList, Category, GamePage, Page, Valoration, \
     User
+from vg.recommendations import transformPrefs, calculateSimilarItems, topMatches
 from vg.scraping.scraping import full_scraping
 
 
@@ -129,6 +138,75 @@ def vote_game(request):
         
     return view_game(request)
         
+def log_in_act(request):
+    if not request.user.is_anonymous():
+        logout(request)
+        return HttpResponseRedirect('/')
+    
+    usuario = request.GET['username']
+    clave = request.GET['password']
+    acceso = authenticate(username=usuario, password=clave)
+    if acceso is not None:
+        if acceso.is_active:
+            login(request, acceso)
+            return HttpResponseRedirect('/profile')
+        else:
+            return render(request, 'noactivo.html')
+    else:
+        return HttpResponseRedirect('/login?error=True')
+        
+    return render_to_response('login.html', {})
+
+def log_in(request):
+    if not request.user.is_anonymous():
+        return HttpResponseRedirect('/')
+    
+    error = request.GET.get('error')
+    
+    return render_to_response('login.html', {'error': error})
+
+@login_required(login_url='/login')
+def perfil(request):
+    usuario = request.user
+    context = {'usuario': usuario}
+    return render(request, 'perfil.html', context)
+    
+
+Prefs = {}  # matriz de usuarios y puntuaciones a cada a items
+ItemsPrefs = {}  # matriz de items y puntuaciones de cada usuario. Inversa de Prefs
+SimItems = []  # matriz de similitudes entre los items
+
+def loadDict():
+    shelf = shelve.open("dataRS.dat")
+    ratings = Valoration.objects.get()
+    for ra in ratings:
+        user = int(ra.user.id)
+        itemid = int(ra.game.id)
+        if(ra.isPositive):
+            rating = float(1)
+        else:
+            rating= float(0)
+        Prefs.setdefault(user, {})
+        Prefs[user][itemid] = rating
+    shelf['Prefs'] = Prefs
+    shelf['ItemsPrefs'] = transformPrefs(Prefs)
+    shelf['SimItems'] = calculateSimilarItems(Prefs, n=10)
+    shelf.close()
+
+
+def reccommendGame(request):
+    game = None
+    if request.method == 'GET':
+        id = request.user.id
+        shelf = shelve.open("dataRS.dat")
+        ItemsPrefs = shelf['ItemsPrefs']
+        shelf.close()
+        recommended = topMatches(ItemsPrefs, int(id), n=4)
+        items = []
+        for re in recommended:
+            item = Game.objects.get(pk=int(re[1]))
+            items.append(item)
+        return render_to_response('recommendedGames.html', {'games': items}, context_instance=RequestContext(request))
 
 
 def get_games_img(games):
