@@ -4,7 +4,7 @@ from vg.scraping.common import open_link, open_link_cookies
 
 
 def get_all_game(page):
-	page_list = 1560
+	page_list = 1
 	while True:
 		soup = open_link('http://store.steampowered.com/search/?page=' + str(page_list) + "&sort_by=Name_ASC")
 		soup = soup.find('div', {'id' : 'search_result_container'})

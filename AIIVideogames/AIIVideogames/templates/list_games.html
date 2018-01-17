@@ -1,6 +1,20 @@
 
+<div class="btn-group" role="group" aria-label="..."style="float: right; margin-right: 5%; margin-bottom: 1em">
+	{% ifequal view "grid" %}
+		<a href="{{requestURI}}&view=grid" class="btn btn-primary glyphicon glyphicon-th-large"></a>
+		<a href="{{requestURI}}&view=list" class="btn btn-default glyphicon glyphicon-align-justify"></a>
+	{% else %}
+		<a href="{{requestURI}}&view=grid" class="btn btn-default glyphicon glyphicon-th-large"></a>
+		<a href="{{requestURI}}&view=list" class="btn btn-primary glyphicon glyphicon-align-justify"></a>
+	{% endifequal %}
+</div>
+<div style="clear:both"></div>
 {% for g in games %}
-	{% include 'list_games_grid.html' %}
+	{% ifequal view "grid" %}
+		{% include 'list_games_grid.html' %}
+	{% else %}
+		{% include 'list_games_list.html' %}
+	{% endifequal %}
 {% endfor %}
 <div style="clear:both"></div>
 {% include 'pagination.html' %}

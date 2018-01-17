@@ -1,4 +1,12 @@
 $(document).ready(function(){
+	
+jQuery.fn.center = function () {
+    this.css("position","absolute");
+    this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
+    return this;
+}
+
+$(".center").center();
 
 $(".keep-prop").each((i, e) => {
 	e = $(e)
@@ -85,3 +93,8 @@ window.onscroll = function(e) {
  */
 offSetManager();
 });
+
+
+function changeImg(e) {
+	$("#main-img").attr('src', e.getAttribute('src'))
+}

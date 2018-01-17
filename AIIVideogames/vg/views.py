@@ -1,7 +1,8 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render_to_response
 
-from vg.models import Game, MediaList, Category
+from vg.models import Game, MediaList, Category, GamePage, Page, Valoration, \
+    User
 from vg.scraping.scraping import full_scraping
 
 
@@ -45,19 +46,89 @@ def list_category(request):
     return render_to_response('list_category.html', {'items': items})
 
 def explore_category(request):
+    view = request.GET.get('view')
     name = request.GET.get('name')
     p = request.GET.get('p')
     if not p:
         p = 1
+    if not view:
+        view = 'list'
     p = int(p)
     
     cat = Category.objects.get(name=name)
     pages = Paginator(cat.games.all(), 12)
+    
+    max_p = pages.num_pages
+    if p > max_p:
+        p = max_p
+    
     games = get_games_img(pages.page(p))
+    get_games_price(games)
     
-    return render_with_pagination('base_games.html', {'title': 'Categoria: ' + name, 'games': games},
-                                                    p, pages.num_pages, '/category/explore?name='+name)
+    model = {'title': 'Categoria: ' + name, 'games': games, 'view': view}
+    model = render_with_pagination(model, p, max_p, '/category/explore?name='+name)
+    return render_to_response('base_games.html', model)
     
+def search_game(request):
+    view = request.GET.get('view')
+    text = request.GET.get('text')
+    p = request.GET.get('p')
+    if not view:
+        view = 'list'
+    if not text:
+        text = ''
+    if not p:
+        p = 1
+    
+    
+#     games = Game.objects.all()
+    games = GamePage.objects.filter(page=Page.objects.get(name="GOG.com"))
+    games_pages = Paginator(games, 20)
+    games = games_pages.page(p)
+    games = get_games_from_gamepage(games)
+    get_games_img(games)
+    get_games_price(games)
+    
+    model = {'games': games, 'view': view}
+    model = render_with_pagination(model, 1, games_pages.num_pages, '/game/search?text='+text)
+    
+    return render_to_response('base_games.html', model)
+
+
+def view_game(request):
+    game = Game.objects.filter(id=request.GET.get('game'))[0]
+    imgs = MediaList.objects.filter(game=game)
+    gamePages = GamePage.objects.filter(game=game).order_by("-price")
+    categories = Category.objects.filter(games__id=game.id)
+    colors = ['default', 'primary', 'success', 'info', 'warning', 'danger']
+    for i in range(len(categories)):
+        categories[i].color = colors[i%len(colors)]
+        
+    num_pos = Valoration.objects.filter(game=game, isPositive=True).count()
+    num_neg = Valoration.objects.filter(game=game, isPositive=False).count()
+    
+    return render_to_response('game.html', {'game': game,
+                                            'imgs': imgs,
+                                            'gamePages': gamePages,
+                                            'categories': categories,
+                                            'num_pos': num_pos,
+                                            'num_neg': num_neg})
+
+def vote_game(request):
+    game = Game.objects.filter(id=request.GET.get('game'))[0]
+    val = Valoration.objects.filter(game=game)
+    if not val:
+        val = Valoration(isPositive=True, user=User.objects.all()[0], game=game)
+     
+    if request.GET.get('v') == 'pos':
+        val.isPositive = True
+    else:
+        val.isPositive = False
+         
+    val.save()
+        
+    return view_game(request)
+        
 
 
 def get_games_img(games):
@@ -71,9 +142,32 @@ def get_game_img(game):
         return ""
     return res[0].value
 
-def render_with_pagination(template, model, p, max_p, requestURI):
+def get_games_price(games):
+    for g in games:
+        g.price = get_game_price(g)
+    return games
+
+def get_game_price(game):
+    res = GamePage.objects.filter(game=game)
+    if not res:
+        return ""
+    
+    _min = None
+    for p in res:
+        if not _min or p.price < _min:
+            _min = p.price
+            
+    return str(_min)
+
+def get_games_from_gamepage(gps):
+    games = []
+    for gp in gps:
+        games.append(gp.game)
+    return games
+
+def render_with_pagination(model, p, max_p, requestURI):
     ran = []
-    ran.append("1")
+    ran.append(1)
     
     temp = p-3
     if temp<=1:
@@ -83,22 +177,22 @@ def render_with_pagination(template, model, p, max_p, requestURI):
         ran.append("...")
         
     for i in range(temp, p):
-        ran.append(str(i))
+        ran.append(i)
         
     if p != 1:
         ran.append(p)
         
     temp = p+4
     if temp > max_p:
-        temp = max_p
+        temp = max_p+1
     
-    for i in range(p+1, p+4):
-        ran.append(str(i))
+    for i in range(p+1, temp):
+        ran.append(i)
     
-    if temp-p == 4 and temp != max_p:
+    if temp-p == 4 and temp != max_p+1:
         ran.append("...")
-    
-    if temp != max_p:
+        
+    if temp != max_p+1:
         ran.append(max_p)
     
     modelPage = {'p': p, 
@@ -109,4 +203,4 @@ def render_with_pagination(template, model, p, max_p, requestURI):
           'requestURI': requestURI}
           
     model.update(modelPage)
-    return render_to_response(template, model)
+    return model

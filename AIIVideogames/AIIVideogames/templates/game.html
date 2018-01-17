@@ -1,0 +1,78 @@
+{% extends 'base.html' %} 
+{% block content %}
+
+	<div class="col-md-1"></div>	
+	<div class="col-md-9">
+		<div>
+			<div style="float:left;width:60%">
+				<h1>{{game.name}}</h1>
+				<div style="margin-bottom:1em;width:100%">
+					{% for cat in categories %}
+						<a href="/category/explore/?name={{cat}}" class="label label-{{cat.color}}">{{cat}}</a>
+					{% endfor %}
+				</div>
+			</div>
+			
+			<div style="float:right">
+				<a class="btn btn-default" href="/game/vote?game={{game.id}}&v=pos">
+					<span class="glyphicon glyphicon-thumbs-up"></span>
+					{{num_neg}}
+				</a>
+				<a class="btn btn-default" href="/game/vote?game={{game.id}}&v=neg">
+					<span class="glyphicon glyphicon-thumbs-down"></span>
+					{{num_neg}}
+				</a>
+			</div>
+			<div style="clear:both"></div>
+		</div>
+		
+		<div class="col-md-7">
+			<img id="main-img" class="keep-prop" style="width:100%;margin-bottom:1em" src="{{imgs.0}}">
+			<div>
+			{% for img in imgs %}
+				<a class="thumbnail" style="width:20%;float:left;cursor:pointer">
+					<img class="keep-prop" style="width:100%" src="{{img}}" onclick="changeImg(this)">
+				</a>
+			{% endfor %}
+			</div>
+			<div style="clear:both"></div>
+		</div>
+		
+		<div class="col-md-5">
+			<ul class="list-group">
+			{% for gp in gamePages %}
+				<li class="list-group-item" style="cursor:pointer" onclick="window.open('{{gp.pageURL}}', '_blank')">
+					<img style="width:48px;height:48px" src="{{gp.page.image}}">
+					<span style="font-size: 20px;">{{gp.page.name}}</span>
+					
+					<div style="float:right">
+						{% ifequal gp.price 0.0 %}
+							<span style="color:green;font-size: 18px">Gratis</span>
+						{% else %}
+							<span style="font-size: 18px">{{gp.price}}&euro;</span>
+						{% endifequal %}
+					</div>
+					<div style="clear:both"></div>
+				</li>
+			{% endfor %}
+			</ul>
+		</div>
+		
+		<div class="col-md-12">
+			<div style="width:100%">
+				<h2>Descripci&oacute;n</h2>
+				{{game.description|safe}}
+				
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+				<br>
+			</div>
+		</div>
+		
+	</div>
+	<div class="col-md-2"></div>
+	
+{% endblock %}

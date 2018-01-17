@@ -1,4 +1,6 @@
+import json
 import urllib2
+
 from bs4 import BeautifulSoup
 
 
@@ -24,3 +26,12 @@ def open_link_cookies(url, cookies):
     f.close()
 
     return BeautifulSoup(html_doc, 'html.parser')
+
+
+def open_link_json(url):
+    f = urllib2.urlopen(url)
+    html_doc = f.read()
+    f.close()
+
+    return json.loads(html_doc)
+
