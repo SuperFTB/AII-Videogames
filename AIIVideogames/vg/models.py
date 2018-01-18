@@ -38,7 +38,7 @@ class Valoration(models.Model):
     game = models.ForeignKey(Game, null=False)
     
     def __unicode__(self):
-        return self.isPositive
+        return unicode(self.isPositive) or u''
 
 
 class GamePage(models.Model):
