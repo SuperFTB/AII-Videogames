@@ -2,7 +2,7 @@
 
 from django.contrib.auth.hashers import make_password
 
-from vg.models import Game, MediaList, Category, GamePage, User
+from vg.models import Game, MediaList, Category, GamePage, User, Valoration
 from vg.scraping.common import open_link, open_link_cookies
 
 
@@ -27,19 +27,22 @@ def get_all_users():
 				rev = open_link(url)
 				for user in rev.findAll('div', {'class': 'apphub_friend_block_container'}):
 					user = user.find('a')['href']
-					get_one_user(user + 'recommended/', user.replace('http://steamcommunity.com/id/', '')
-								.replace('http://steamcommunity.com/profiles/', '')[:-1])
-					if maxu >= 10:
+					if get_one_user(user + 'recommended/', user.replace('http://steamcommunity.com/id/', '')
+								.replace('http://steamcommunity.com/profiles/', '')[:-1]):
+						maxu += 1
+					if maxu >= 1000:
 						return
-					maxu += 1
 				
 		page_list += 1
 			
 
 def get_one_user(url, user):
-	print user + ":"
-	
-	User(username=user, password=make_password(user)).save()
+	try:
+		us = User(username=user, password=make_password(user))
+		us.save()
+		print user + ":"
+	except:
+		return False
 	
 	page = 1
 	maxg = 1
@@ -64,9 +67,15 @@ def get_one_user(url, user):
 					title = ""
 			
 			valoration = r.find('div', {'class': 'vote_header'}).find('img')['src'].endswith('Up.png')
-			print "\t"+title + " (" + str(valoration) + ")"
 			
-			if maxg >= 5:
+			try:
+				_g = Game.objects.get(name=title)
+				Valoration(isPositive=valoration, user=us, game=_g).save()
+				print "\t"+title + " (" + str(valoration) + ")"
+			except:
+				print "\tError"
+			
+			if maxg >= 20:
 				end = True
 				break
 			maxg += 1
@@ -74,5 +83,7 @@ def get_one_user(url, user):
 		if end:
 			break
 		page += 1
+		
+	return True
 	
 	

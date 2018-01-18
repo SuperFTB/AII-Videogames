@@ -15,6 +15,5 @@ urlpatterns = patterns('',
     url(r'^game/view/', 'vg.views.view_game'),
     url(r'^game/vote/', 'vg.views.vote_game'),
     url(r'^loadRS/', 'vg.views.loadRS'),
-    url(r'^profile/', 'vg.views.profile'),
-    url(r'^recommendedFilms/', 'vg.views.reccommendGame')
+    url(r'^recommended/', 'vg.views.reccommend_game')
 )

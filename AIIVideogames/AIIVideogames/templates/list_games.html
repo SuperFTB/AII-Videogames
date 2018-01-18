@@ -1,3 +1,5 @@
+{% extends 'base.html' %} 
+{% block content %}
 
 <div class="btn-group" role="group" aria-label="..."style="float: right; margin-right: 5%; margin-bottom: 1em">
 	{% ifequal view "grid" %}
@@ -18,4 +20,6 @@
 {% endfor %}
 <div style="clear:both"></div>
 {% include 'pagination.html' %}
+
+{% endblock %}
 	

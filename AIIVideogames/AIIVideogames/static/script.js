@@ -1,7 +1,7 @@
 $(document).ready(function(){
 	
 jQuery.fn.center = function () {
-    this.css("position","absolute");
+    this.css("position","relative");
     this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
     return this;
 }
@@ -16,6 +16,24 @@ $(".keep-prop").each((i, e) => {
 	
 	e.height(e.width()*(1./prop));
 })
+
+$(".sld").slider({});
+
+$(".sld").on("slide", function(e) {
+	console.log(e.value[0])
+	$("#pmin").text(e.value[0]);
+	$("#hmin").text(e.value[0]);
+	
+	max = e.value[1];
+	hmax = max
+	if(max >= 100) {
+		max = "100+";
+		hmax = 999999;
+	}
+			
+	$("#pmax").text(max);
+	$("#hmax").text(hmax);
+});
 	
 /**
  * This object controls the nav bar. Implement the add and remove

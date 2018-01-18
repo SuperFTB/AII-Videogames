@@ -2,9 +2,9 @@ import shelve
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import login, logout
 from django.core.paginator import Paginator
+from django.db.models.aggregates import Count
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from django.template.context import RequestContext
@@ -21,8 +21,8 @@ def populate(request):
 
 def index(request):
     games = Game.objects.all()
-    games_pages = Paginator(games, 20)
-    games = games_pages.page(466)
+    games_pages = Paginator(games, 16)
+    games = games_pages.page(1)
     get_games_img(games)
     
     return render_to_response('index.html', {'games': games})
@@ -32,6 +32,8 @@ def list_category(request):
     letter = ""
     count = 0
     for c in Category.objects.order_by('name'):
+        if len(c.name) == 0:
+            continue
         if(c.name[0] != letter):
             items.append("L:" + c.name[0])
             letter = c.name[0]
@@ -75,31 +77,50 @@ def explore_category(request):
     get_games_price(games)
     
     model = {'title': 'Categoria: ' + name, 'games': games, 'view': view}
-    model = render_with_pagination(model, p, max_p, '/category/explore?name='+name)
-    return render_to_response('base_games.html', model)
+    model = render_with_pagination(model, p, max_p, '/category/explore?name='+name+"&p=")
+    return render_to_response('list_games.html', model)
     
 def search_game(request):
     view = request.GET.get('view')
     text = request.GET.get('text')
     p = request.GET.get('p')
+    pmin = request.GET.get('pmin')
+    pmax = request.GET.get('pmax')
     if not view:
         view = 'list'
     if not text:
         text = ''
     if not p:
         p = 1
+    else:
+        p = int(p)
+    if not pmin:
+        pmin = 0
+    if not pmax:
+        pmax = 999999
+        
+    print request.user
     
+    getQuery = ""
+    for k, v in request.GET.iteritems():
+        if k != "p":
+            getQuery += ("&" + k +"=" + v)
+    getQuery = getQuery[1:]
     
 #     games = Game.objects.all()
     games = GamePage.objects.filter(page=Page.objects.get(name="GOG.com"))
-    games_pages = Paginator(games, 20)
+    games_pages = Paginator(games, 1)
     games = games_pages.page(p)
     games = get_games_from_gamepage(games)
     get_games_img(games)
     get_games_price(games)
     
-    model = {'games': games, 'view': view}
-    model = render_with_pagination(model, 1, games_pages.num_pages, '/game/search?text='+text)
+    model = {'games': games, 
+             'view': view, 
+             'pages': Page.objects.all(), 
+             'text': text, 'pmin': pmin, 
+             'pmax': 100 if pmax > 100 else pmax}
+    model = render_with_pagination(model, p, games_pages.num_pages, '/game/search?' + getQuery + '&p=')
     
     return render_to_response('base_games.html', model)
 
@@ -139,17 +160,18 @@ def vote_game(request):
     return view_game(request)
         
 def log_in_act(request):
-    if not request.user.is_anonymous():
+    if request.user.is_authenticated():
         logout(request)
         return HttpResponseRedirect('/')
     
     usuario = request.GET['username']
     clave = request.GET['password']
     acceso = authenticate(username=usuario, password=clave)
+    print acceso
     if acceso is not None:
         if acceso.is_active:
             login(request, acceso)
-            return HttpResponseRedirect('/profile')
+            return HttpResponseRedirect('/')
         else:
             return render(request, 'noactivo.html')
     else:

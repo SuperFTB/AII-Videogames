@@ -1,4 +1,56 @@
 {% extends 'base.html' %} 
 {% block content %}
-{% include 'list_games.html' %}
+	
+	<div class="col-md-3">
+		<form method="get" action="/game/search">
+			<input type="hidden" name="text" value="{{text}}">
+			<input type="hidden" name="view" value="{{view}}">
+			<input type="hidden" name="p" value="{{p}}">
+			<ul class="list-group">
+				<li class="list-group-item">
+					<h3>P&aacuteginas</h3>
+					{% for p in pages %}
+						<div class="form-group">
+							<div class="checkbox">
+								<label><input checked name="check-{{p.name}}" type="checkbox" value="true">{{p.name}}</label>
+							</div>
+						</div>
+					{% endfor %}
+				</li>
+				
+				<li class="list-group-item">
+					<h3>Precios</h3>
+					<div class="form-group">
+						<div class="range">
+							<p>Rango de precios: </p>
+							<input class="sld" type="text" value="" data-slider-min="0" data-slider-max="100" data-slider-step="5" data-slider-value="[{{pmin}},{{pmax}}]"/> 
+							<br>
+							<br>
+							<p>Min: <b><span id="pmin">0</span> &euro;</b></p>
+							<p>Max: <b><span id="pmax">100+</span> &euro;</b></p>
+							
+							<input type="hidden" name="min" id="hmin" value="0">
+							<input type="hidden" name="max" id="hmax" value="999999">
+						</div>
+					</div>
+				</li>
+				
+				<li class="list-group-item">
+					<div class="form-group">
+						<input type="submit" class="btn btn-primary" value="Filtrar">
+					</div> 
+				</li>
+			</ul>
+		</form>
+	</div>
+	
+	<div class="col-md-9">
+		{% for g in games %}
+			{% include 'list_games_list.html' %}
+		{% endfor %}
+		<div style="clear:both"></div>
+		{% include 'pagination.html' %}
+	</div>
+	
+
 {% endblock %}
