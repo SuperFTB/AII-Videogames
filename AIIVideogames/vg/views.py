@@ -106,6 +106,16 @@ def search_game(request):
 
 def view_game(request):
     game = Game.objects.filter(id=request.GET.get('game'))[0]
+    shelf = shelve.open("dataRS.dat")
+    ItemsPrefs = shelf['ItemsPrefs']
+    shelf.close()
+    recommended = topMatches(ItemsPrefs, int(request.GET.get('game')), n=5)
+    items = []
+    itemsMedia=[]
+    for re in recommended:
+        item = Game.objects.get(pk=int(re[1]))
+        items.append(item)
+        itemsMedia.append(MediaList.objects.filter(game=itemsMedia)[0])
     imgs = MediaList.objects.filter(game=game)
     gamePages = GamePage.objects.filter(game=game).order_by("-price")
     categories = Category.objects.filter(games__id=game.id)
@@ -121,7 +131,9 @@ def view_game(request):
                                             'gamePages': gamePages,
                                             'categories': categories,
                                             'num_pos': num_pos,
-                                            'num_neg': num_neg})
+                                            'num_neg': num_neg,
+                                            'games': items,
+                                            'games_images': itemsMedia})
 
 def vote_game(request):
     game = Game.objects.filter(id=request.GET.get('game'))[0]
