@@ -190,16 +190,20 @@ def log_out(request):
 
 @login_required(login_url='/login')
 def perfil(request):
-    games = Game.objects.all()
-    games_pages = Paginator(games, 16)
-    games = games_pages.page(1)
-    get_games_img(games)
+    games = Valoration.objects.filter(user=request.user)
+    games = get_games_from_valorations(games)
     
     p = request.GET.get('p')
     if not p:
         p = 1
+    else:
+        p = int(p)
         
-    model = render_with_pagination({}, p, games_pages.num_pages, "/perfil?&p=")
+    games_pages = Paginator(games, 16)
+    games = games_pages.page(p)
+    get_games_img(games)
+        
+    model = render_with_pagination({'games': games}, p, games_pages.num_pages, "/perfil?&p=")
     
     return render_to_response('perfil.html', model)
 
@@ -284,6 +288,12 @@ def get_game_price(game):
     return str(_min)
 
 def get_games_from_gamepage(gps):
+    games = []
+    for gp in gps:
+        games.append(gp.game)
+    return games
+
+def get_games_from_valorations(gps):
     games = []
     for gp in gps:
         games.append(gp.game)
