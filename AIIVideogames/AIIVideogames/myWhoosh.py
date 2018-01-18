@@ -122,10 +122,8 @@ def buscaPorTituloDescPrecioRango(keyword, min, max, indiceJuego, parser):
 
 def db(indiceJuego):
     con = None
-
     try:
         con = sqlite3.connect('vg.db')
-
         cur1 = con.cursor()
         cur1.execute("SELECT * FROM 'vg_game'")
         juegos = cur1.fetchall()
@@ -136,7 +134,6 @@ def db(indiceJuego):
         cur3.execute("SELECT * FROM 'vg_category'")
         categorias = cur3.fetchall()
 
-
         for juego in juegos:
             cats=""
             precio=0.0
@@ -145,7 +142,6 @@ def db(indiceJuego):
             cur4.execute("SELECT * FROM 'vg_category_games' WHERE game_id={jid}".format(jid=juego.__getitem__(0)))
             relacion_categoriasJuego = cur4.fetchall()
             for rel in relacion_categoriasJuego:
-                #if juego.__getitem__(0)==rel.__getitem__(2):
                 if cats=="":
                     cats=categorias[rel.__getitem__(1)-1].__getitem__(1)
                 else:
@@ -154,7 +150,6 @@ def db(indiceJuego):
             cur5.execute("SELECT * FROM 'vg_gamepage' WHERE game_id={jid}".format(jid=juego.__getitem__(0)))
             relacion_paginaJuego = cur5.fetchall()
             for rel in relacion_paginaJuego:
-                #if juego.__getitem__(0) == rel.__getitem__(4):
                 if precio==0.0 or precio>rel.__getitem__(2):
                     precio=rel.__getitem__(2)
                 if plats=="":
@@ -168,12 +163,9 @@ def db(indiceJuego):
             insertaJuego(juego.__getitem__(1),juego.__getitem__(2), cats, plats, precio, indiceJuego)
 
     except sqlite3.Error, e:
-
         print "Error %s:" % e.args[0]
         sys.exit(1)
-
     finally:
-
         if con:
             con.close()
 

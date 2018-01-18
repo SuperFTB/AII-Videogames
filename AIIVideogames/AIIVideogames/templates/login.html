@@ -1,18 +1,7 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
 {% block content %}
-
-{% if error %}
-	<div class="alert alert-danger" style="margin-left:10%;width:80%" role="alert">
-		Fallo al iniciar sesion, mire que sus credenciales son correctas.
-	</div>
-{% endif %}
-
-{% block loginout%}
-            {% if usuario.is_authenticated%}
-                <a href="/login-act">Logout</a>
-            {% else %}
-                <a href="/login">Login</a>
-            {% endif %}
-        {% endblock %}
-
+	<form id='formulario' method='post' action=''>{% csrf_token %}
+		<table>{{formulario}}</table>
+		<p><input type='submit' value='Ingresar'/></p>
+	</form>
 {% endblock %}

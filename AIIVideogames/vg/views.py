@@ -1,6 +1,7 @@
 import shelve
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import login, logout
 from django.core.paginator import Paginator
@@ -170,58 +171,75 @@ def vote_game(request):
     val.save()
         
     return view_game(request)
-        
-def log_in_act(request):
-    if request.user.is_authenticated():
-        logout(request)
-        return HttpResponseRedirect('/')
-    
-    usuario = request.GET['username']
-    clave = request.GET['password']
-    acceso = authenticate(username=usuario, password=clave)
-    print acceso
-    if acceso is not None:
-        if acceso.is_active:
-            login(request, acceso)
-            return HttpResponseRedirect('/')
-        else:
-            return render(request, 'noactivo.html')
-    else:
-        return HttpResponseRedirect('/login?error=True')
-        
-    return render_to_response('login.html', {})
+
 
 def log_in(request):
     if not request.user.is_anonymous():
-        return HttpResponseRedirect('/')
-    
-    error = request.GET.get('error')
-    
-    return render_to_response('login.html', {'error': error})
+        return HttpResponseRedirect('/perfil')
+    if request.method == 'POST':
+        formulario = AuthenticationForm(request.POST)
+        if formulario.is_valid:
+            usuario = request.POST['username']
+            clave = request.POST['password']
+            acceso = authenticate(username=usuario, password=clave)
+            if acceso is not None:
+                if acceso.is_active:
+                    login(request, acceso)
+                    return HttpResponseRedirect('/perfil')
+                else:
+                    return render(request, 'noactivo.html')
+            else:
+                return render(request, 'nousuario.html')
+    else:
+        formulario = AuthenticationForm()
+    context = {'formulario': formulario}
+    return render(request, 'login.html', context)
+
+
+@login_required(login_url='/login')
+def log_out(request):
+    logout(request)
+    return HttpResponseRedirect('/')
+
 
 @login_required(login_url='/login')
 def perfil(request):
     usuario = request.user
     context = {'usuario': usuario}
     return render(request, 'perfil.html', context)
-    
+
 
 Prefs = {}  # matriz de usuarios y puntuaciones a cada a items
 ItemsPrefs = {}  # matriz de items y puntuaciones de cada usuario. Inversa de Prefs
 SimItems = []  # matriz de similitudes entre los items
 
+
+def loadRS(request):
+    loadDict()
+    return render_to_response('loadRS.html')
+
+
 def loadDict():
     shelf = shelve.open("dataRS.dat")
-    ratings = Valoration.objects.get()
-    for ra in ratings:
-        user = int(ra.user.id)
-        itemid = int(ra.game.id)
-        if(ra.isPositive):
-            rating = float(1)
-        else:
-            rating= float(0)
-        Prefs.setdefault(user, {})
-        Prefs[user][itemid] = rating
+    users = User.objects.all()
+    games = Game.objects.all()
+    for u in users:
+        for g in games:
+            ratings = Valoration.objects.filter(user=u, game=g)
+            user = int(u.id)
+            itemid = int(g.id)
+            if (ratings):
+                for ra in ratings:
+                    if (ra.isPositive):
+                        rating = float(2)
+                    else:
+                        rating = float(0)
+                    Prefs.setdefault(user, {})
+                    Prefs[user][itemid] = rating
+            else:
+                rating = float(1)
+                Prefs.setdefault(user, {})
+                Prefs[user][itemid] = rating
     shelf['Prefs'] = Prefs
     shelf['ItemsPrefs'] = transformPrefs(Prefs)
     shelf['SimItems'] = calculateSimilarItems(Prefs, n=10)
