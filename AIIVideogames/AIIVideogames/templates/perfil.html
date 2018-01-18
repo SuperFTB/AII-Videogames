@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
-{% block titulo %}Bienvenido{% endblock %}
-{% block encabezado %}
-	<h1>Bienvenido</h1>
-{% endblock %}
-{% block contenido %}
-	<p>Bievenido {{usuario.username|upper}},
-		la última vez que te vimos por aquí fue el {{usuario.last_login}}.</p>
-	<p>Eres miembro desde el {{usuario.date_joined}}</p>
+{% block content %}
+
+{% for g in games %}
+	{% ifequal view "grid" %}
+		{% include 'list_games_grid.html' %}
+	{% else %}
+		{% include 'list_games_list.html' %}
+	{% endifequal %}
+{% endfor %}
+<div style="clear:both"></div>
+{% include 'pagination.html' %}
+
 {% endblock %}

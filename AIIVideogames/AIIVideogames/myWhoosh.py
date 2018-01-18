@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 import os, os.path, sqlite3
+
 from whoosh.fields import *
 from whoosh.index import create_in, open_dir
+from whoosh.qparser import QueryParser, FuzzyTermPlugin, MultifieldParser
 from whoosh.query import *
-from whoosh.qparser import QueryParser,FuzzyTermPlugin, MultifieldParser
 
 
 def inicia():
-    if not os.path.exists("indiceJuego"):
-        os.mkdir("indiceJuego")
+    pth = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/indiceJuego")
+    if not os.path.exists(pth):
+        os.mkdir(pth)
         esquemaJuego = Schema(titulo=KEYWORD(stored=True), descripcion=TEXT,
                               categorias=KEYWORD(stored=True), plataformas=KEYWORD(stored=True),
                               precio=NUMERIC(stored=True))
         indiceJuego = create_in("indiceJuego",esquemaJuego)
     else:
-        indiceJuego = open_dir("indiceJuego")
-
-    parser = MultifieldParser(["titulo", "descripcion"], schema=indiceJuego.schema)
+        indiceJuego = open_dir(pth)
+ 
+    parser = MultifieldParser(["titulo"], schema=indiceJuego.schema)
     parser.add_plugin(FuzzyTermPlugin())
-
+ 
     return indiceJuego,parser
 
 
@@ -110,13 +112,14 @@ def buscaPorTituloDescPrecioMenorQue(keyword, max, indiceJuego, parser):
     return res
 
 
-def buscaPorTituloDescPrecioRango(keyword, min, max, indiceJuego, parser):
+def buscar(keyword, min, max, indiceJuego, parser):
     keyword = keyword + "~2"
     res = []
     with indiceJuego.searcher() as searcher:
         myquery = And([parser.parse(keyword), TermRange("precio", min, max)])
-        for hit in searcher.search(myquery, limit=None):
+        for hit in searcher.search_page(myquery, 1, pagelen=10):
             res.append(hit.values())
+        
     return res
 
 
@@ -178,42 +181,3 @@ def db(indiceJuego):
             con.close()
 
 
-if __name__ == "__main__":
-    # INICIO
-    indiceJuego,parser=inicia()
-
-    # INSERTAR DATOS PRUEBA
-    #insertaJuego(u"titulo1", u"desc1",u"cat1,cat2,cat3",u"plat1,plat2,plat3",50,indiceJuego)
-    #insertaJuego(u"titulo2", u"desc2",u"cat2",u"plat3",20,indiceJuego)
-
-    # INSERTAR DATOS DB
-    #db(indiceJuego)
-
-    # TESTEO QUERIES
-    pro1 = buscaPorTituloDesc("juego",indiceJuego,parser)
-    print(pro1)
-    print("-------------------------------")
-    pro2 = buscaPorCategoria("cat2",indiceJuego)
-    print(pro2)
-    print("-------------------------------")
-    pro3 = buscaPorPlataforma("plat3",indiceJuego)
-    print(pro3)
-    print("-------------------------------")
-    pro4 = buscaPrecioMayorQue(10,indiceJuego)
-    print(pro4)
-    print("-------------------------------")
-    pro5 = buscaPrecioMenorQue(40,indiceJuego)
-    print(pro5)
-    print("-------------------------------")
-    pro6 = buscaPrecioRango(40, 60,indiceJuego)
-    print(pro6)
-    print("-------------------------------")
-    pro7 = buscaPorTituloDescPrecioMayorQue("titulo", 10,indiceJuego,parser)
-    print(pro7)
-    print("-------------------------------")
-    pro8 = buscaPorTituloDescPrecioMenorQue("desc1", 30,indiceJuego,parser)
-    print(pro8)
-    print("-------------------------------")
-    pro9 = buscaPorTituloDescPrecioRango("desc1", 40, 50,indiceJuego,parser)
-    print(pro9)
-    print("-------------------------------")

@@ -1,14 +1,15 @@
+import os
 import shelve
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import login, logout
 from django.core.paginator import Paginator
-from django.db.models.aggregates import Count
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from django.template.context import RequestContext
 
+from AIIVideogames.myWhoosh import inicia, buscar
 from vg.models import Game, MediaList, Category, GamePage, Page, Valoration, \
     User
 from vg.recommendations import transformPrefs, calculateSimilarItems, topMatches
@@ -81,46 +82,31 @@ def explore_category(request):
     return render_to_response('list_games.html', model)
     
 def search_game(request):
-    view = request.GET.get('view')
     text = request.GET.get('text')
-    p = request.GET.get('p')
-    pmin = request.GET.get('pmin')
-    pmax = request.GET.get('pmax')
-    if not view:
-        view = 'list'
+    pmin = request.GET.get('min')
+    pmax = request.GET.get('max')
     if not text:
         text = ''
-    if not p:
-        p = 1
-    else:
-        p = int(p)
     if not pmin:
         pmin = 0
     if not pmax:
         pmax = 999999
-        
-    print request.user
-    
-    getQuery = ""
-    for k, v in request.GET.iteritems():
-        if k != "p":
-            getQuery += ("&" + k +"=" + v)
-    getQuery = getQuery[1:]
     
 #     games = Game.objects.all()
-    games = GamePage.objects.filter(page=Page.objects.get(name="GOG.com"))
-    games_pages = Paginator(games, 1)
-    games = games_pages.page(p)
-    games = get_games_from_gamepage(games)
+#     games = GamePage.objects.filter(page=Page.objects.get(name="GOG.com"))
+    a,b = inicia()
+    games = get_game_by_title(buscar(text, pmin, pmax, a, b))
     get_games_img(games)
     get_games_price(games)
     
-    model = {'games': games, 
-             'view': view, 
+    if pmax > 100:
+        pmax = "100+"
+    
+    model = {'games': games,
              'pages': Page.objects.all(), 
-             'text': text, 'pmin': pmin, 
+             'text': text, 
+             'pmin': pmin, 
              'pmax': 100 if pmax > 100 else pmax}
-    model = render_with_pagination(model, p, games_pages.num_pages, '/game/search?' + getQuery + '&p=')
     
     return render_to_response('base_games.html', model)
 
@@ -201,9 +187,18 @@ def log_in(request):
 
 @login_required(login_url='/login')
 def perfil(request):
-    usuario = request.user
-    context = {'usuario': usuario}
-    return render(request, 'perfil.html', context)
+    games = Game.objects.all()
+    games_pages = Paginator(games, 16)
+    games = games_pages.page(1)
+    get_games_img(games)
+    
+    p = request.GET.get('p')
+    if not p:
+        p = 1
+        
+    model = render_with_pagination({}, p, games_pages.num_pages, "/profile?&p=")
+    
+    return render_to_response('perfil.html', model)
     
 
 Prefs = {}  # matriz de usuarios y puntuaciones a cada a items
@@ -275,6 +270,12 @@ def get_games_from_gamepage(gps):
     games = []
     for gp in gps:
         games.append(gp.game)
+    return games
+
+def get_game_by_title(titles):
+    games = []
+    for g in titles:
+        games.append(Game.objects.filter(name=g[0])[0])
     return games
 
 def render_with_pagination(model, p, max_p, requestURI):

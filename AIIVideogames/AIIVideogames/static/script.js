@@ -22,7 +22,7 @@ $(".sld").slider({});
 $(".sld").on("slide", function(e) {
 	console.log(e.value[0])
 	$("#pmin").text(e.value[0]);
-	$("#hmin").text(e.value[0]);
+	$("#hmin").val(e.value[0]);
 	
 	max = e.value[1];
 	hmax = max
@@ -32,7 +32,7 @@ $(".sld").on("slide", function(e) {
 	}
 			
 	$("#pmax").text(max);
-	$("#hmax").text(hmax);
+	$("#hmax").val(hmax);
 });
 	
 /**

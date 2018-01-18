@@ -4,8 +4,6 @@
 	<div class="col-md-3">
 		<form method="get" action="/game/search">
 			<input type="hidden" name="text" value="{{text}}">
-			<input type="hidden" name="view" value="{{view}}">
-			<input type="hidden" name="p" value="{{p}}">
 			<ul class="list-group">
 				<li class="list-group-item">
 					<h3>P&aacuteginas</h3>
@@ -26,11 +24,11 @@
 							<input class="sld" type="text" value="" data-slider-min="0" data-slider-max="100" data-slider-step="5" data-slider-value="[{{pmin}},{{pmax}}]"/> 
 							<br>
 							<br>
-							<p>Min: <b><span id="pmin">0</span> &euro;</b></p>
-							<p>Max: <b><span id="pmax">100+</span> &euro;</b></p>
+							<p>Min: <b><span id="pmin">{{pmin}}</span> &euro;</b></p>
+							<p>Max: <b><span id="pmax">{{pmax}}</span> &euro;</b></p>
 							
-							<input type="hidden" name="min" id="hmin" value="0">
-							<input type="hidden" name="max" id="hmax" value="999999">
+							<input type="hidden" name="min" id="hmin" value="{{pmin}}">
+							<input type="hidden" name="max" id="hmax" value="{{pmax}}">
 						</div>
 					</div>
 				</li>
@@ -49,7 +47,6 @@
 			{% include 'list_games_list.html' %}
 		{% endfor %}
 		<div style="clear:both"></div>
-		{% include 'pagination.html' %}
 	</div>
 	
 
