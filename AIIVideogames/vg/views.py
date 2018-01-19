@@ -114,6 +114,7 @@ def search_game(request):
 
 def view_game(request):
     game = Game.objects.filter(id=request.GET.get('game'))[0]
+    '''
     shelf = shelve.open("dataRS.dat")
     ItemsPrefs = shelf['ItemsPrefs']
     shelf.close()
@@ -124,6 +125,7 @@ def view_game(request):
         item = Game.objects.get(pk=int(re[1]))
         items.append(item)
         itemsMedia.append(MediaList.objects.filter(game=itemsMedia)[0])
+    '''
     imgs = MediaList.objects.filter(game=game)
     gamePages = GamePage.objects.filter(game=game).order_by("-price")
     categories = Category.objects.filter(games__id=game.id)
@@ -139,9 +141,7 @@ def view_game(request):
                                             'gamePages': gamePages,
                                             'categories': categories,
                                             'num_pos': num_pos,
-                                            'num_neg': num_neg,
-                                            'games': items,
-                                            'games_images': itemsMedia})
+                                            'num_neg': num_neg})
 
 def vote_game(request):
     game = Game.objects.filter(id=request.GET.get('game'))[0]
@@ -243,20 +243,15 @@ def loadDict():
     shelf['SimItems'] = calculateSimilarItems(Prefs, n=10)
     shelf.close()
 
-
-def reccommendGame(request):
-    game = None
+@login_required(login_url='/login')
+def reccommendGames(request):
     if request.method == 'GET':
         id = request.user.id
-        shelf = shelve.open("dataRS.dat")
-        ItemsPrefs = shelf['ItemsPrefs']
-        shelf.close()
-        recommended = topMatches(ItemsPrefs, int(id), n=4)
         items = []
-        for re in recommended:
-            item = Game.objects.get(pk=int(re[1]))
+        for i in range(1,6,1):
+            item = Game.objects.get(pk=int(id*1000*i))
             items.append(item)
-        return render_to_response('recommendedGames.html', {'games': items}, context_instance=RequestContext(request))
+        return render_to_response('recommendationItems.html', {'games': items}, context_instance=RequestContext(request))
 
 
 def get_games_img(games):

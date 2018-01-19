@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-<h1>Recommended games for the UserID: {{user.id}}</h1>
-{% if games %}
-{% for game in games %}
-<ul>
-<li>Title: {{game.name}}</li>
-</ul>
-{% endfor %}
-{% else %}
-<h2> Insufficient user data </h2>
-{% endif %}
-</body>
-</html>
+{% block content %}
+    <h1>Recommended games for the UserID: {{user.id}}</h1>
+    {% if games %}
+    {% for game in games %}
+    <ul>
+    <li>Title: {{game.name}}</li>
+    </ul>
+    {% endfor %}
+    {% else %}
+    <h2> Insufficient user data </h2>
+    {% endif %}
+{% endblock %}
